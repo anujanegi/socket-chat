@@ -12,11 +12,11 @@ function getUserList(){
   return userList;
 }
 
-function setUserTyping(n){
+function setUserTyping(index){
   var userList = [];
-    for (var i = 0; i < users.length; i++)
-      userList[i] = users[i];
-  userList[n] = "typing... " + users[n];
+  for (var i = 0; i < users.length; i++)
+    userList[i] = users[i];
+  userList[index] = "typing... " + users[index];
   return userList;
 }
 
