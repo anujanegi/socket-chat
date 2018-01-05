@@ -4,39 +4,111 @@
   <head>
     <title>Socket chat</title>
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
+      html { margin: 0; padding: 0; box-sizing: border-box; height: 100%; }
+      *, *:before, *:after { box-sizing: inherit; }
+      body { display: flex; font: 13px Helvetica, Arial; }
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
       form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
       form button { width: 9%; background: grey; border: none; padding: 10px; }
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
+      #container{ display: flex; flex-direction: column; width: calc(100% - 200px); }
+      section { flex: 5; background: white; }
+      aside { background: darkgrey; flex: 1; }
+      aside input { border: 0; padding: 10px;  width: 70%; }
+      aside button { width: 25%; background: grey; border: none; padding: 10px; }
     </style>
   </head>
 
-<body>
-  <h2 align=center>Socket chat</h2>
-  <ul id="messages"></ul>
-  <form action="">
-    <input id="m" autocomplete="off"/><button>Send</button>
-  </form>
+  <body>
+    <div id="container">
+      <section>
+        <h2 align=center>Socket chat</h2>
+        <ul id="messages"></ul>
+      </section>
+        <form action="">
+          <input id="m" autocomplete="off" disabled="true"/><button id="ms" disabled="true">Send</button>
+        </form>
+    </div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-  <script>
-    $(function () {
-      var socket = io();
-      $('form').submit(function(){
-        socket.emit('chat message', $('#m').val());
-        $('#m').val('');
-        return false;
+    <aside>
+      <h2><pre> Members</pre></h2>
+      <input id="name" type="text" placeholder="Enter your name"/>
+      <button type="submit" id="submitname" onClick="setName()">Set name</button>
+      <ul id="members"></ul>
+    </aside>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      $(function () {
+        var userList = [];
+        var temp_name = "";
+        var typing = false;
+        var socket = io();
+
+        socket.on("connect", function(e){
+          socket.emit("Start");
+        });
+
+        socket.on('name', function(name){
+          temp_name=name;
+        });
+
+        $('form').submit(function(){
+          var temp = [temp_name , $("#m").val()];
+          socket.emit('chat message', temp);
+          $('#m').val('');
+          typing = false;
+          socket.emit("not typing");
+          return false;
+        });
+
+        socket.on('chat message', function(msg){
+        $('#messages').append("<li><b>"+msg[0]+":</b> "+msg[1]);
+       });
+
+       socket.on('info', function(inf){
+         $('#messages').append('<li><i>' + inf + '</i></li>');
+       });
+       socket.on('user list', function(userList){
+           updateUserList(userList);
+       });
+       socket.on('typing signal', function(userList){
+           updateUserList(userList);
+       });
+
+       function setName(){
+          temp_name = document.getElementById("name").value;
+          socket.emit("set name", temp_name);
+          document.getElementById("name").disabled=true;
+          document.getElementById("submitname").hidden=true;
+          document.getElementById("m").disabled=false;
+          document.getElementById("ms").disabled=false;
+        }
+        function updateUserList(u){
+          var list = document.getElementById("messages");
+          list.innerHTML = "";
+          for (var i = 0; i < u.length; i++ ) {
+              var item = document.createElement("li");
+              item.innerHTML = u[i];
+              list.appendChild(item);
+          }
+        }
+        $('#m').on('input', function() {
+          if ( $('#m').val().length != "" && typing == false ){
+              socket.emit("typing");
+              typing = true;
+          }
+          else if ( $('#m').val() == "" ) {
+              socket.emit("not typing");
+              typing = false;
+          }
+        });
+
       });
-      socket.on('chat message', function(msg){
-      $('#messages').append($('<li>').text(msg));
-    });
-    });
-  </script>
-</body>
+    </script>
 
+  </body>
 </html>
