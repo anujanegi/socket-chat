@@ -46,7 +46,6 @@ io.on('connection', function (socket) {
   });
 
   socket.on('typing', function(name){
-    console.log(name);
     io.emit('typing signal', setUserTyping(users.indexOf(name)));
   });
 
