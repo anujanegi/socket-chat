@@ -68,7 +68,7 @@
 
         $('#m').on('input', function() {
           if ( $('#m').val().length != "" && typing == false ){
-              socket.emit("typing");
+              socket.emit("typing", $('#name').val());
               typing = true;
           }
           else if ( $('#m').val() == "" ) {
