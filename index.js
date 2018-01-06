@@ -17,7 +17,6 @@ function setUserTyping(s){
   for (var i = 0; i < users.length; i++){
     userList[i] = users[i];}
   userList[s] = "typing... " + userList[s];
-  console.log(userList);
   return userList;
 }
 
